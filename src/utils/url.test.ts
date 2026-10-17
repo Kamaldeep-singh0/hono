@@ -80,6 +80,16 @@ describe('url', () => {
       expect(res).toEqual([':id{[0-9]+}#next', 'id', /^[0-9]+(?=\/next)/])
     })
 
+    it('regex pattern with next containing regex special characters', () => {
+      const res = getPattern(':id{[0-9]+}', '[draft]')
+      expect(res).toEqual([':id{[0-9]+}#[draft]', 'id', /^[0-9]+(?=\/\[draft\])/])
+    })
+
+    it('regex pattern with next containing a dot', () => {
+      const res = getPattern(':id{[0-9]+}', 'file.html')
+      expect(res).toEqual([':id{[0-9]+}#file.html', 'id', /^[0-9]+(?=\/file\.html)/])
+    })
+
     it('wildcard', () => {
       const res = getPattern('*')
       expect(res).toBe('*')

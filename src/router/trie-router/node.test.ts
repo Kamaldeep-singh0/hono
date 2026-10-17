@@ -260,6 +260,51 @@ describe('Regexp', () => {
   })
 })
 
+describe('Regexp followed by a static part with regex special characters', () => {
+  const node = new Node()
+  node.insert('get', '/a/:id{[0-9]+}/[draft]', 'bracketed')
+  node.insert('get', '/d/:id{[0-9]+}/draft', 'plain static')
+
+  it('/a/42/[draft]', () => {
+    const [res] = node.search('get', '/a/42/[draft]')
+    expect(res.length).toBe(1)
+    expect(res[0][0]).toEqual('bracketed')
+    expect(res[0][1]['id']).toBe('42')
+  })
+  it('/a/42/d should not match: [draft] is a literal segment, not a character class', () => {
+    const [res] = node.search('get', '/a/42/d')
+    expect(res.length).toBe(0)
+  })
+  it('/a/42/other should not match', () => {
+    const [res] = node.search('get', '/a/42/other')
+    expect(res.length).toBe(0)
+  })
+  it('/d/42/draft should still match a plain static part after a regexp param', () => {
+    const [res] = node.search('get', '/d/42/draft')
+    expect(res.length).toBe(1)
+    expect(res[0][0]).toEqual('plain static')
+    expect(res[0][1]['id']).toBe('42')
+  })
+})
+
+describe('Static bracketed part without a preceding regexp param', () => {
+  const node = new Node()
+  node.insert('get', '/b/[draft]', 'static bracketed')
+  node.insert('get', '/c/:id/[draft]', 'param bracketed')
+
+  it('/b/[draft]', () => {
+    const [res] = node.search('get', '/b/[draft]')
+    expect(res.length).toBe(1)
+    expect(res[0][0]).toEqual('static bracketed')
+  })
+  it('/c/42/[draft]', () => {
+    const [res] = node.search('get', '/c/42/[draft]')
+    expect(res.length).toBe(1)
+    expect(res[0][0]).toEqual('param bracketed')
+    expect(res[0][1]['id']).toBe('42')
+  })
+})
+
 describe('All', () => {
   const node = new Node()
   node.insert('ALL', '/all-methods', 'all methods') // ALL
